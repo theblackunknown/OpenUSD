@@ -1,6 +1,38 @@
 set(PXR_PREFIX pxr/imaging)
 set(PXR_PACKAGE hio)
 
+set (optionalCppFiles)
+set (optionalPrivateHeaders)
+if (PXR_IMAGING_HIO_STB_FORMATS)
+    list(APPEND optionalCppFiles
+        stbImage.cpp
+    )
+    list(APPEND optionalPrivateHeaders
+        stb/stb_image.h
+        stb/stb_image_resize2.h
+        stb/stb_image_write.h
+    )
+endif()
+if (PXR_IMAGING_HIO_OPENEXR_FORMATS)
+    list(APPEND optionalCppFiles
+        OpenEXRImage.cpp
+        OpenEXR/openexr-c.c
+    )
+    list(APPEND optionalPrivateHeaders
+        OpenEXR/openexr-c.h
+    )
+endif()
+
+set(JSON_HIO_STB_FORMATS ${PXR_IMAGING_HIO_STB_FORMATS})
+list(TRANSFORM JSON_HIO_STB_FORMATS REPLACE "[a-zA-Z0-9]+" "\"\\0\"")
+list(JOIN JSON_HIO_STB_FORMATS ", " JSON_HIO_STB_FORMATS)
+
+set(JSON_HIO_OPENEXR_FORMATS ${PXR_IMAGING_HIO_OPENEXR_FORMATS})
+list(TRANSFORM JSON_HIO_OPENEXR_FORMATS REPLACE "[a-zA-Z0-9]+" "\"\\0\"")
+list(JOIN JSON_HIO_OPENEXR_FORMATS ", " JSON_HIO_OPENEXR_FORMATS)
+
+configure_file("${CMAKE_CURRENT_LIST_DIR}/plugInfo.json.in" "${CMAKE_CURRENT_LIST_DIR}/plugInfo.json" @ONLY)
+
 pxr_library(hio
     LIBRARIES
         arch
@@ -29,16 +61,11 @@ pxr_library(hio
         api.h
 
     PRIVATE_HEADERS
-        OpenEXR/openexr-c.h
         rankedTypeMap.h
-        stb/stb_image.h
-        stb/stb_image_resize2.h
-        stb/stb_image_write.h
+        ${optionalPrivateHeaders}
 
     CPPFILES
-        OpenEXRImage.cpp
-        OpenEXR/openexr-c.c
-        stbImage.cpp
+        ${optionalCppFiles}
 
     RESOURCE_FILES
         plugInfo.json
